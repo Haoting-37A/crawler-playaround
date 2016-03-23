@@ -106,43 +106,57 @@ def access_posts(post_id, url_prefix, access_token,tmp_postattri_info):
     return tmp_postattri_info
 
 def likecount (post_id, url_prefix, access_token):
-    like_param = {"access_token": access_token, "fields": "likes"}
+    like_param = {"access_token": access_token, "fields": "likes{limit=100000000}"}
     r = requests.get(url_prefix+post_id, params=like_param)
     r_json =  r.json()
     page_json = r_json.get('likes')
     likes = []
-    while (page_json.get('paging').get('next') == None) == False:
-        likes = likes + page_json.get('data')
-        #print('get likes data')#,posts)
-        nextpageurl = page_json.get('paging').get('next')
-        #print('get url of next page', nextpageurl)
-        nextpage = requests.get(nextpageurl)
-        #print('get data of next page of posts', nextpage)
-        page_json = nextpage.json()
-        #print('jsonlize next page', page_json)
+    while True:
+        if (page_json == None):
+            break
+        elif page_json.get('data') == None:
+            break
+        else:
+            likes = likes + page_json.get('data')
+        if page_json.get('paging').get('next') == None:
+            break
+        else:
+            nextpageurl = page_json.get('paging').get('next')
+            #print('get url of next page', nextpageurl)
+            nextpage = requests.get(nextpageurl)
+            #print('get data of next page of posts', nextpage)
+            page_json = nextpage.json()
+            #print('jsonlize next page', page_json)
     number = len(likes)
     return number
 
 def comtcount (post_id, url_prefix, access_token):
-    like_param = {"access_token": access_token, "fields": "comments"}
-    r = requests.get(url_prefix+post_id, params=like_param)
+    comt_param = {"access_token": access_token, "fields": "comments{limit=100000000}"}
+    r = requests.get(url_prefix+post_id, params=comt_param)
     r_json =  r.json()
     page_json = r_json.get('comments')
-    likes = []
-    while (page_json.get('paging').get('next') == None) == False:
-        likes = likes + page_json.get('data')
-        #print('get coments data')#,posts)
-        nextpageurl = page_json.get('paging').get('next')
-        #print('get url of next page', nextpageurl)
-        nextpage = requests.get(nextpageurl)
-        #print('get data of next page of posts', nextpage)
-        page_json = nextpage.json()
-        #print('jsonlize next page', page_json)
-    number = len(likes)
+    comts = []
+    while True:
+        if (page_json == None):
+            break
+        elif (page_json.get('data') == None):
+            break
+        else:
+            comts = comts + page_json.get('data')
+        if page_json.get('paging').get('next') == None:
+            break
+        else:
+            nextpageurl = page_json.get('paging').get('next')
+            #print('get url of next page', nextpageurl)
+            nextpage = requests.get(nextpageurl)
+            #print('get data of next page of posts', nextpage)
+            page_json = nextpage.json()
+            #print('jsonlize next page', page_json)
+    number = len(comts)
     return number
 
 if __name__ == '__main__':
-    access_token = 'CAACEdEose0cBAJhZBbvd49iLnQucGHGPw5ZCBZAT0glrXS273RZAZCTiXfK9jCDRaYUu6FxFd8ZCPVplqBCNH95bZBLoguw9eHpV3B88sWneBa1kETW4GdXU3R3AnOd6zN6lqJ4cu8xZAlyt9C0YEL3qWVKrDMFefszO0Q5dHQTKxftwmpjaOX8UNGPVdQSpi07uEiYuffuGVvdsCTQiSH5n'
+    access_token = 'CAAXm0ZA47b3YBAHSnJ9SExAGx3YqegZASK98oCl8Imz4aGoDSrTcw8j1FAupcOpelLKiFcWVrCMshp1nMBRfKsbUCHqHDzqL3Rgoz2ZBNNeBugr6Dl01FM0TPbCAfTJTOM1zqdDlJ2jBsbdU6tGJJSB28XDDgqS6gvxGtfk0wiWTe1ytw7lTSNyYbxZBzn54ZAZBRdPjtGS5Ph7u8iHeVJ'
     print("get access_token")
     f_read = open('page_ids.txt', 'r')
     print('open id list file')

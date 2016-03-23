@@ -1,5 +1,5 @@
 import requests
-
+import datetime
 def read_page_ids(ids_file):
     id_lst = []
     for line in ids_file.readlines():
@@ -24,9 +24,9 @@ def access_pages(id_lst, url_prefix, access_token):
         tmp_posts_counts = 0
         r = requests.get(url_prefix+page_id, params=param_page)
         r_json= r.json()
-        #print('jsonlize web page')#, r_json)
+        print('jsonlize web page', page_id)
         page_json = r_json.get('posts')
-        #print('duplicate r_json')#, page_json)
+        #print('duplicate r_json')
         tmp_page_info['page_title'] = str(r_json.get('name'))
         print('analysing company:', tmp_page_info['page_title'])
         if not r_json.get('phone')==None:
@@ -41,7 +41,6 @@ def access_pages(id_lst, url_prefix, access_token):
         tmp_page_info['online'] = str(r_json.get('events'))
         while (page_json.get('paging')== None) == False:
             posts = page_json.get('data')
-            #print('get posts data')#,posts)
             for post in posts:
                 post_id = post.get('id')
                 print('get post id', post_id)
@@ -52,8 +51,12 @@ def access_pages(id_lst, url_prefix, access_token):
                 tmp_postattri_info['repostcount'] = tmp_postattri_info_return['repostcount'] + tmp_postattri_info['repostcount']
                 #print('tmp postattri info repost count', tmp_postattri_info['repostcount'])
                 tmp_postattri_info['tmp_sharescount_list'] = tmp_postattri_info['tmp_sharescount_list'] + tmp_postattri_info_return['tmp_sharescount_list']
-                #print('tmp_postatrri_info shares count list', tmp_postattri_info['tmp_sharescount_list'])
-                print('get post type', tmp_type)
+                print('tmp_postatrri_info shares count list', tmp_postattri_info['tmp_sharescount_list'])
+                tmp_postattri_info['tmp_likecount_list'] = tmp_postattri_info['tmp_likecount_list'] + tmp_postattri_info_return['tmp_likecount_list']
+                print('tmp_postatrri_info likes count list', tmp_postattri_info['tmp_likecount_list'])
+                tmp_postattri_info['tmp_comentcount_list'] = tmp_postattri_info['tmp_comentcount_list'] + tmp_postattri_info_return['tmp_comentcount_list']
+                print('tmp_postatrri_info coment count list', tmp_postattri_info['tmp_comentcount_list'])
+                #print('get post type', tmp_type)
                 tmp_type_counts[str(tmp_type)] = tmp_type_counts[str(tmp_type)] + 1
                 #print('caculate post types', tmp_type_counts)
             nextpageurl = page_json.get('paging').get('next')
@@ -66,10 +69,12 @@ def access_pages(id_lst, url_prefix, access_token):
         tmp_page_info['percnt_video'] = tmp_type_counts['video']/tmp_posts_counts
         tmp_page_info['percnt_photo'] = tmp_type_counts['photo']/tmp_posts_counts
         tmp_page_info['percnt_link'] = tmp_type_counts['link']/tmp_posts_counts
+        print("tmp_postattri_info['tmp_sharescount_list']",tmp_postattri_info['tmp_sharescount_list'])
         tmp_post_info['avershares'] = sum(tmp_postattri_info['tmp_sharescount_list'])/len(tmp_postattri_info['tmp_sharescount_list'])
-        tmp_post_info['averlikes'] = sum(tmp_postattri_info['tmp_sharescount_list'])/len(tmp_postattri_info['tmp_sharescount_list'])
-        tmp_post_info['avercomts'] = sum(tmp_postattri_info['tmp_sharescount_list'])/len(tmp_postattri_info['tmp_sharescount_list'])
-        tmp_post_info['percorig'] = len(tmp_postattri_info['tmp_sharescount_list'])/tmp_posts_counts
+        print("tmp_postattri_info['tmp_likecount_list']", tmp_postattri_info['tmp_likecount_list'])
+        tmp_post_info['averlikes'] = sum(tmp_postattri_info['tmp_likecount_list'])/len(tmp_postattri_info['tmp_likecount_list'])
+        tmp_post_info['avercomts'] = sum(tmp_postattri_info['tmp_comentcount_list'])/len(tmp_postattri_info['tmp_comentcount_list'])
+        tmp_post_info['percorig'] = tmp_postattri_info['repostcount']/tmp_posts_counts
         #tmp_post_info['percrepost'] = 1 - 
         tmp_post_info['responseto']
         tmp_post_info['postscount'] = tmp_posts_counts
@@ -89,17 +94,20 @@ def access_posts(post_id, url_prefix, access_token,tmp_postattri_info):
     else:
         tmp_shares_count = r_json.get('shares').get('count')
         #print('tmp shares count', tmp_shares_count)
-        tmp_postattri_info['tmp_sharescount_list']=[0]
+        tmp_postattri_info['tmp_sharescount_list'] = [0]
         tmp_postattri_info['tmp_sharescount_list'][0] = int(tmp_shares_count)
+        print("tmp_postattri_info['tmp_sharescount_list']", tmp_postattri_info['tmp_sharescount_list'])
         #print('tmp sharescount list', tmp_postattri_info['tmp_sharescount_list'][0])
     tmp_likes_count = likecount(post_id, url_prefix, access_token)
-    print('calculating likes counts',post_id, tmp_likes_count)
+    print('calculating likes counts', tmp_likes_count)
     tmp_postattri_info['tmp_likecount_list'] = [0]
-    tmp_postattri_info['tmp_likecount_list'] = tmp_likes_count
+    #print("tmp_postattri_info['tmp_likecount_list']",tmp_postattri_info['tmp_likecount_list'])
+    tmp_postattri_info['tmp_likecount_list'][0] = tmp_likes_count
+    print("tmp_postattri_info['tmp_likecount_list']",tmp_postattri_info['tmp_likecount_list'])
     tmp_comments_counet = comtcount(post_id, url_prefix, access_token)
     print('calculating comments counts', tmp_comments_counet)
     tmp_postattri_info['tmp_comentcount_list'] = [0]
-    tmp_postattri_info['tmp_comentcount_list'] = tmp_comments_counet
+    tmp_postattri_info['tmp_comentcount_list'][0] = tmp_comments_counet
     post_type = r_json.get('type')
     #print(post_type)
     tmp_postattri_info['tmptype'] = post_type
@@ -156,14 +164,18 @@ def comtcount (post_id, url_prefix, access_token):
     return number
 
 if __name__ == '__main__':
-    access_token = 'CAAXm0ZA47b3YBAHSnJ9SExAGx3YqegZASK98oCl8Imz4aGoDSrTcw8j1FAupcOpelLKiFcWVrCMshp1nMBRfKsbUCHqHDzqL3Rgoz2ZBNNeBugr6Dl01FM0TPbCAfTJTOM1zqdDlJ2jBsbdU6tGJJSB28XDDgqS6gvxGtfk0wiWTe1ytw7lTSNyYbxZBzn54ZAZBRdPjtGS5Ph7u8iHeVJ'
+    access_token = 'CAAXm0ZA47b3YBAHvs34CAZAJTZBBYGbgdFwVFDit5ZBaUIrxB2Gjfj5EqQckZC7a0ZCwsS1kRA8aIh0V190ZA1TRKJtBFOsgEGlDCVqUHoZCyOHSZAWRp79x8ECkRzkZCo0ESG6k3dvz8jmyJBdxceU6dvoikRRqCnkGzDQdjMEt6FeHHEUV0o4WjUXX2aKWZB8ok4dZAMOUiUI6H5jK9oLyIOHc'
     print("get access_token")
     f_read = open('page_ids.txt', 'r')
     print('open id list file')
     id_lst = read_page_ids(f_read)
+    print(id_lst)
     f_write = open('page_stats_output.txt', 'w')
-    f_write.write('')
-    testv = 1
+    start_time = datetime.datetime.now()
+    f_write.write('Start Time: ' + str(start_time) + '\n')
     print('read id list')
     print('start access pages')
     access_pages(id_lst, 'https://graph.facebook.com/v2.5/', access_token)
+    f_write = open('page_stas_output.txt', 'a')
+    end_time = datetime.datetime.now()
+    f_write.write('\n' + 'Finish Time: ' + str(end_time))

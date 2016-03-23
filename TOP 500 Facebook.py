@@ -109,27 +109,9 @@ def likecount (post_id, url_prefix, access_token):
     like_param = {"access_token": access_token, "fields": "likes"}
     r = requests.get(url_prefix+post_id, params=like_param)
     r_json =  r.json()
-    page_json = r_json
+    page_json = r_json.get('likes')
     likes = []
-    while (page_json.get('paging')== None) == False:
-        likes = likes + page_json.get('data')
-        print('get likes data')#,posts)
-        nextpageurl = page_json.get('paging').get('next')
-        print('get url of next page', nextpageurl)
-        nextpage = requests.get(nextpageurl)
-        print('get data of next page of posts', nextpage)
-        page_json = nextpage.json()
-        print('jsonlize next page', page_json)
-    number = len(likes)
-    return number
-
-def comtcount (post_id, url_prefix, access_token):
-    like_param = {"access_token": access_token, "fields": "comments"}
-    r = requests.get(url_prefix+post_id, params=like_param)
-    r_json =  r.json()
-    page_json = r_json
-    likes = []
-    while (page_json.get('paging')== None) == False:
+    while (page_json.get('paging').get('next') == None) == False:
         likes = likes + page_json.get('data')
         #print('get likes data')#,posts)
         nextpageurl = page_json.get('paging').get('next')
@@ -141,8 +123,26 @@ def comtcount (post_id, url_prefix, access_token):
     number = len(likes)
     return number
 
+def comtcount (post_id, url_prefix, access_token):
+    like_param = {"access_token": access_token, "fields": "comments"}
+    r = requests.get(url_prefix+post_id, params=like_param)
+    r_json =  r.json()
+    page_json = r_json.get('comments')
+    likes = []
+    while (page_json.get('paging').get('next') == None) == False:
+        likes = likes + page_json.get('data')
+        #print('get coments data')#,posts)
+        nextpageurl = page_json.get('paging').get('next')
+        #print('get url of next page', nextpageurl)
+        nextpage = requests.get(nextpageurl)
+        #print('get data of next page of posts', nextpage)
+        page_json = nextpage.json()
+        #print('jsonlize next page', page_json)
+    number = len(likes)
+    return number
+
 if __name__ == '__main__':
-    access_token = 'CAACEdEose0cBAOOGAegx6ivqrXQBbaUm98bc9WsGKMn4RyDMNEsyWdspy3VEZAi7TFh93Q1eaeBLAkT6nummQrKHAZBVPVwh52uBgXF6kaPxJiO35heqLZB09CCDGUiufgBZAtNfdPBDI7ZA2ySRREM4DZArAjRHsKab13sOxWm4aYyJlIrXUrcfELsAXMZAXXsnv4G616ovre79CRZAaJZAj'
+    access_token = 'CAACEdEose0cBAJhZBbvd49iLnQucGHGPw5ZCBZAT0glrXS273RZAZCTiXfK9jCDRaYUu6FxFd8ZCPVplqBCNH95bZBLoguw9eHpV3B88sWneBa1kETW4GdXU3R3AnOd6zN6lqJ4cu8xZAlyt9C0YEL3qWVKrDMFefszO0Q5dHQTKxftwmpjaOX8UNGPVdQSpi07uEiYuffuGVvdsCTQiSH5n'
     print("get access_token")
     f_read = open('page_ids.txt', 'r')
     print('open id list file')
